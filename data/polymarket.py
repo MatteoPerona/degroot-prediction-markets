@@ -20,7 +20,7 @@ from pathlib import Path
 
 GAMMA_BASE = "https://gamma-api.polymarket.com"
 CLOB_BASE = "https://clob.polymarket.com"
-USER_AGENT = "Mozilla/5.0 (compatible; final-project research/0.1)"
+USER_AGENT = "Mozilla/5.0 (compatible; degroot-prediction-markets research/0.1)"
 
 
 def _get_json(url: str, *, timeout: float = 15.0, retries: int = 3) -> dict | list:

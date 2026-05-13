@@ -55,7 +55,7 @@ RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
 
 GAMMA = "https://gamma-api.polymarket.com"
-UA = {"User-Agent": "Mozilla/5.0 (compatible; final-project research/0.2)"}
+UA = {"User-Agent": "Mozilla/5.0 (compatible; degroot-prediction-markets research/0.2)"}
 
 # Pre-committed thresholds
 END_DATE_MIN = "2026-03-01"
