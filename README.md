@@ -9,7 +9,7 @@ resulting estimator to resolved Polymarket markets.
 
 | Path                                  | Purpose                                                                                                                                                                                      |
 | ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [prediction_market/](prediction_market/) | Discrete-event simulator:`SourceLayer`, `Trader`, `Market`, `PredictionMarketSimulation`.                                                                                            |
+| [prediction_market/](prediction_market/) | Discrete-event simulator: `SourceLayer`, `Trader`, `Market`, `PredictionMarketSimulation`.                                                                                            |
 | [fit/](fit/)                             | OU method-of-moments estimator ([`method_of_moments.py`](fit/method_of_moments.py)), simulator→OU bridge ([`sim_to_ou_bridge.py`](fit/sim_to_ou_bridge.py)), and predictive-validity metrics. |
 | [data/](data/)                           | Polymarket Gamma + CLOB fetchers and the preprocessing pipeline (saturated-tail truncation, hourly bars, logit transform).                                                                   |
 | [scripts/](scripts/)                     | End-to-end pipeline runners (see below).                                                                                                                                                     |
@@ -28,10 +28,29 @@ pip install -r requirements.txt
 
 Only `numpy`, `pandas`, `matplotlib`, and Jupyter — no heavy ML dependencies.
 
-## 🔁 Reproducing the empirical results
+## 🔁 Reproducing the results
 
-The scripts are meant to be run in order. Each writes JSON/CSV artifacts to
-`data/processed/` that the next stage reads.
+Each script writes JSON / pickle / CSV artifacts to `data/processed/` that the
+next stage reads. Two parallel pipelines:
+
+### Simulator validation (Section 5)
+
+```sh
+# 5.1: β_price sweep — bridge between DeGroot D(t) and OU κ_eff.
+python scripts/run_bridge_sweep.py
+
+# 5.2: frozen-topology sweep over |A| ∈ {3, 5, 8, 12, 16, 20, 25, 30}.
+python scripts/run_topology_sweep.py
+
+# 5.3: information-matrix rank sweep over rank(Φ) ∈ {1, 2, 3, 5}.
+python scripts/run_rank_sweep.py
+
+# Plots for Section 5 + Appendix C.
+python scripts/make_sim_figures.py
+python scripts/make_failure_mode_figure.py
+```
+
+### Empirical pipeline (Sections 6 + 7)
 
 ```sh
 # 1. Curate a corpus of resolved Polymarket markets (Gamma + CLOB).
@@ -45,12 +64,15 @@ python scripts/run_ou_fits.py
 # 3. Score the lifetime-attractor predictor against realized outcomes.
 python scripts/run_predictive_validity.py
 
-# 4. Rolling-window OU fits, to test whether κ̂(t) grows over a market's
+# 4. Domain stratification (single-game / sports-other / non-sports).
+python scripts/classify_markets.py
+
+# 5. Rolling-window OU fits, to test whether κ̂(t) grows over a market's
 #    lifetime (the framework's distinctive time-varying-topology claim).
 python scripts/run_rolling_ou.py
 python scripts/analyze_rolling_ou.py
 
-# 5. Paper figures.
+# 6. Plots for Sections 6 + 7.
 python scripts/make_figures.py
 python scripts/make_rolling_figure.py
 ```
@@ -65,8 +87,8 @@ python scripts/make_rolling_figure.py
   log-ACF R² ≥ 0.94 on 62%.
 - 🎯 **Lifetime-attractor predictor beats the uninformative null** on the
   OU-shape-consistent stratum (Brier 0.199 vs. 0.250 on 42 good-shape
-  markets; 0.181 vs. 0.250 on 27 non-sports markets), but is indistinguishable
-  from chance on single-game sports markets (Brier 0.271).
+  markets; 0.204 vs. 0.250 on 24 non-sports markets), but is indistinguishable
+  from chance on single-game sports markets (Brier 0.264 on n = 39).
 - ❌ **Topology-growth prediction is falsified on this corpus.** Rolling-window
   `κ̂(t)` does not systematically grow over a market's lifetime: median
   per-market slope of `log κ̂` on normalized lifetime is −0.31 (95 % CI
